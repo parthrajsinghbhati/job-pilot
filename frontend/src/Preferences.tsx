@@ -1,11 +1,9 @@
 import { useState, useEffect } from 'react';
-import { useSupabase } from './useSupabase';
-import { useUser } from '@clerk/clerk-react';
+import api from './api';
 import { Settings, Save, Plus, X } from 'lucide-react';
 
 export default function Preferences() {
-  const supabase = useSupabase();
-  const { user } = useUser();
+  const [userId] = useState<string | null>(localStorage.getItem('user_id'));
   const [queries, setQueries] = useState<string[]>([]);
   const [newQuery, setNewQuery] = useState('');
   const [location, setLocation] = useState('India');
@@ -14,39 +12,38 @@ export default function Preferences() {
 
   useEffect(() => {
     async function fetchPreferences() {
-      const { data, error } = await supabase
-        .from('user_preferences')
-        .select('*')
-        .single();
-
-      if (error && error.code !== 'PGRST116') {
-        console.error('Error fetching preferences:', error);
-      } else if (data) {
-        setQueries(data.linkedin_search_queries || []);
-        if (data.location) setLocation(data.location);
+      if (!userId) return;
+      try {
+        const res = await api.get(`/preferences/${userId}`);
+        const { preferences } = res.data;
+        if (preferences) {
+          setQueries(preferences.linkedin_search_queries || []);
+          if (preferences.location) setLocation(preferences.location);
+        }
+      } catch (err) {
+        console.error('Error fetching preferences:', err);
+      } finally {
+        setLoading(false);
       }
-      setLoading(false);
     }
     fetchPreferences();
-  }, [supabase]);
+  }, [userId]);
 
   const handleSave = async () => {
-    if (!user) return;
+    if (!userId) return;
     setSaving(true);
-    const { error } = await supabase
-      .from('user_preferences')
-      .upsert({
-        user_id: user.id,
+    try {
+      await api.post('/preferences', {
+        user_id: userId,
         linkedin_search_queries: queries,
         location: location,
-      }, { onConflict: 'user_id' });
-
-    if (error) {
-      alert('Error saving preferences: ' + error.message);
-    } else {
+      });
       alert('Preferences saved successfully!');
+    } catch (err: any) {
+      alert('Error saving preferences: ' + (err.response?.data?.error || err.message));
+    } finally {
+      setSaving(false);
     }
-    setSaving(false);
   };
 
   const addQuery = () => {

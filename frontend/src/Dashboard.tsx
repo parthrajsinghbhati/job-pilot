@@ -1,9 +1,9 @@
 import { useEffect, useState } from 'react';
-import { useUser } from '@clerk/clerk-react';
 import { ExternalLink, Search, Loader2 } from 'lucide-react';
+import api from './api';
 
 export default function Dashboard() {
-  const { user } = useUser();
+  const [userId, setUserId] = useState<string | null>(localStorage.getItem('user_id'));
   const [jobs, setJobs] = useState<any[]>([]);
   const [searching, setSearching] = useState(false);
   const [searchQuery, setSearchQuery] = useState('');
@@ -12,19 +12,18 @@ export default function Dashboard() {
   const [hasSearched, setHasSearched] = useState(false);
   const [agentStatus, setAgentStatus] = useState<string>('Agent is idle. Awaiting your command...');
 
-  const API_URL = window.location.hostname === 'localhost' 
-    ? 'http://localhost:8000' 
-    : 'https://job-pilot-8yvz.onrender.com';
+  useEffect(() => {
+    setUserId(localStorage.getItem('user_id'));
+  }, []);
 
   const fetchJobs = async () => {
-    if (!user) return;
+    if (!userId) return;
     try {
-      const res = await fetch(`${API_URL}/jobs/${user.id}`);
-      const data = await res.json();
-      console.log('🔄 fetchJobs poll:', { count: data.jobs?.length });
+      const res = await api.get(`/jobs/${userId}`);
+      const { jobs } = res.data;
       
-      if (data.jobs && data.jobs.length > 0) {
-        setJobs(data.jobs);
+      if (jobs && jobs.length > 0) {
+        setJobs(jobs);
         setHasSearched(true);
         if (searching) {
           setSearching(false);
@@ -40,34 +39,23 @@ export default function Dashboard() {
     fetchJobs();
     const interval = setInterval(fetchJobs, 3000); 
     return () => clearInterval(interval);
-  }, [searching, user]);
+  }, [searching, userId]);
 
   const handleSearch = async () => {
-    if (!searchQuery.trim() || !user) return;
+    if (!searchQuery.trim() || !userId) return;
     
-    console.log('🚀 handleSearch called with:', searchQuery, 'user:', user.id);
     setSearching(true);
     setJobs([]); 
     setHasSearched(true);
     setActiveQuery(searchQuery); 
     setAgentStatus("🚀 Initializing JobPilot Agent v1.0...");
 
-
-    console.log('📡 Calling backend at:', API_URL + '/scrape');
-
     try {
-      const res = await fetch(`${API_URL}/scrape`, {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
-          query: searchQuery,
-          location: location,
-          user_id: user.id
-        }),
+      await api.post('/scrape', {
+        query: searchQuery,
+        location: location,
+        user_id: userId
       });
-      console.log('✅ Backend responded:', res.status, res.statusText);
-      const data = await res.json();
-      console.log('📦 Response body:', data);
     } catch (err) {
       console.error('❌ Search failed:', err);
       setAgentStatus('⚠️ Connection failed. Check backend logs.');

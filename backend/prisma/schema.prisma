@@ -1,0 +1,108 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+model User {
+  id               String            @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  email            String            @unique
+  password         String
+  created_at       DateTime?         @default(now()) @db.Timestamptz(6)
+  
+  jobs             Job[]
+  customized_resumes CustomizedResume[]
+  base_resumes     BaseResume[]
+  preferences      UserPreference?
+
+  @@map("users")
+}
+
+model Job {
+  job_id             String            @id
+  company            String?
+  job_title          String?
+  level              String?
+  location           String?
+  description        String?
+  status             String?           @default("new")
+  is_active          Boolean?          @default(true)
+  application_date   DateTime?         @db.Timestamptz(6)
+  resume_score       Int?              @db.SmallInt
+  notes              String?
+  scraped_at         DateTime?         @default(now()) @db.Timestamptz(6)
+  last_checked       DateTime?         @default(now()) @db.Timestamptz(6)
+  job_state          String?           @default("new")
+  resume_score_stage String            @default("initial")
+  is_interested      Boolean?
+  customized_resume_id String?         @db.Uuid
+  provider           String?
+  posted_at          DateTime?         @db.Timestamptz(6)
+  user_id            String?           @db.Uuid
+
+  user               User?             @relation(fields: [user_id], references: [id])
+  customized_resume  CustomizedResume? @relation(fields: [customized_resume_id], references: [id], onUpdate: Cascade, onDelete: SetNull)
+
+  @@index([company])
+  @@index([is_active])
+  @@index([job_title])
+  @@index([last_checked])
+  @@index([resume_score])
+  @@index([scraped_at])
+  @@index([status])
+  @@map("jobs")
+}
+
+model CustomizedResume {
+  id             String    @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  name           String
+  email          String
+  phone          String?
+  location       String?
+  summary        String?
+  skills         String[]
+  education      Json?
+  experience     Json?
+  projects       Json?
+  certifications Json?
+  languages      String[]
+  links          Json?
+  created_at     DateTime? @default(now()) @db.Timestamptz(6)
+  last_updated   DateTime? @default(now()) @db.Timestamptz(6)
+  resume_link    String?
+  user_id        String?   @db.Uuid
+  
+  user           User?     @relation(fields: [user_id], references: [id])
+  jobs           Job[]
+
+  @@map("customized_resumes")
+}
+
+model BaseResume {
+  id          String   @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  resume_data Json
+  created_at  DateTime? @default(now()) @db.Timestamptz(6)
+  updated_at  DateTime? @default(now()) @db.Timestamptz(6)
+  user_id     String?   @db.Uuid
+
+  user        User?    @relation(fields: [user_id], references: [id])
+
+  @@map("base_resume")
+}
+
+model UserPreference {
+  user_id                       String   @id @db.Uuid
+  linkedin_search_queries       String[] @default([])
+  careers_future_search_queries String[] @default([])
+  location                      String?  @default("India")
+  created_at                    DateTime? @default(now()) @db.Timestamptz(6)
+  updated_at                    DateTime? @default(now()) @db.Timestamptz(6)
+  agent_status                  String?  @default("Agent is idle. Awaiting your command...")
+
+  user                          User     @relation(fields: [user_id], references: [id])
+
+  @@map("user_preferences")
+}
