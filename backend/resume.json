@@ -1,0 +1,109 @@
+{
+    "certifications": [
+        {
+            "issuer": "Hacker Rank",
+            "name": "SQL (Basic) Certificate",
+            "year": "2026"
+        },
+        {
+            "issuer": "Hacker Rank",
+            "name": "SQL (Intermediate) Certificate",
+            "year": "2026"
+        }
+    ],
+    "education": [
+        {
+            "degree": "Bachelor of Technology (Artificial intelligence)",
+            "end_year": "2028",
+            "field_of_study": "Artificial Intelligence",
+            "institution": "Newton School of Technology, Rishihood University",
+            "start_year": "2024"
+        },
+        {
+            "degree": "Intermediate (Class XII)",
+            "end_year": "2024",
+            "field_of_study": "NA",
+            "institution": "Swami Vivekanand Public School",
+            "start_year": "2023"
+        },
+        {
+            "degree": "Matriculation (Class X)",
+            "end_year": "2022",
+            "field_of_study": "NA",
+            "institution": "Swami Vivekanand Public School",
+            "start_year": "2021"
+        }
+    ],
+    "email": "rudraksh.2024@nst.rishihood.edu.in",
+    "experience": [
+        {
+            "company": "Society for Astrophysics and Space Technology NST-Sonipat",
+            "description": "Leading the planning, coordination, and execution of SAST events to ensure seamless operations and impactful experiences. Managing logistics, collaborating with teams, and implementing innovative strategies to uphold the club\u2019s excellence.",
+            "end_date": "Present",
+            "job_title": "Event organisation Head",
+            "location": "NA",
+            "start_date": "February 2025"
+        }
+    ],
+    "languages": [
+        "NA"
+    ],
+    "links": {
+        "github": "https://github.com/rxdrxksh01",
+        "linkedin": "https://www.linkedin.com/in/rudraksh-sharma-8662b1321/",
+        "portfolio": "NA"
+    },
+    "location": "NA",
+    "name": "Rudraksh Sharma",
+    "phone": "+917404048120",
+    "projects": [
+        {
+            "description": "Analyzed customer churn patterns to identify high-risk users and business impact. Designed a data-driven workflow to support retention strategies and targeted interventions. Built a dashboard to visualise churn trends and support decision-making. Explored how predictive insights can be integrated into automated outreach systems.",
+            "name": "Customer Churn Analysis & Retention Workflow (AI-assisted)",
+            "technologies": [
+                "Python",
+                "Machine Learning",
+                "NoSQL",
+                "JavaScript",
+                "SQL"
+            ]
+        },
+        {
+            "description": "Identified inefficiencies in clinic booking workflows where delayed confirmations caused patient drop-offs. Designed an automated system for appointment booking, instant responses, and structured follow-ups. Integrated AI (Llama 3) to convert medical shorthand into structured clinical notes. Automated scheduling and reminders using Google Calendar API, reducing no-shows. Built end-to-end system connecting patient interaction, scheduling, and doctor workflow.",
+            "name": "CareDost \u2013 AI-Powered Clinic Workflow Automation System",
+            "technologies": [
+                "Python",
+                "Machine Learning",
+                "NoSQL",
+                "JavaScript",
+                "SQL"
+            ]
+        }
+    ],
+    "skills": [
+        "Machine Learning",
+        "Python",
+        "NoSQL",
+        "JavaScript",
+        "SQL",
+        "TensorFlow",
+        "NumPy",
+        "Pandas",
+        "Matplotlib",
+        "React",
+        "Excel",
+        "OpenCV",
+        "MySQL",
+        "Tableau",
+        "Git and Github",
+        "Generative AI",
+        "Analytics",
+        "LangChain",
+        "OpenAI API",
+        "API testing",
+        "GenAI",
+        "LangGraph",
+        "Hugging Face"
+    ],
+    "summary": "AI-focused builder with hands-on experience analyzing and designing real-world automation workflows. Experienced in developing AI-powered systems and breaking down business processes to improve efficiency using intelligent automation. Strong interest in agentic systems, workflow design, and applying AI to real operational problems."
+}

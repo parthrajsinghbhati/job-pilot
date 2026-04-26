@@ -1,0 +1,12 @@
+fastapi
+uvicorn
+supabase
+pydantic
+requests
+beautifulsoup4
+markdownify
+python-dotenv
+litellm
+groq
+httpx
+pydantic-settings
