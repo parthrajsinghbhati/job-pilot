@@ -65,7 +65,7 @@ export async function markExpiredJobs() {
     });
 
     if (jobsToExpire.length > 0) {
-      const jobIds = jobsToExpire.map(j => j.job_id);
+      const jobIds = jobsToExpire.map((j: any) => j.job_id);
       await prisma.job.updateMany({
         where: { job_id: { in: jobIds } },
         data: { 

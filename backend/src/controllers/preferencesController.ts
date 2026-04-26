@@ -2,7 +2,7 @@ import { Request, Response } from 'express';
 import { prisma } from '../lib/prisma';
 
 export const getPreferences = async (req: Request, res: Response) => {
-  const { user_id } = req.params;
+  const user_id = req.params.user_id as string;
   try {
     const preferences = await prisma.userPreference.findUnique({
       where: { user_id }

@@ -8,7 +8,7 @@ export const getHealth = (req: Request, res: Response) => {
 };
 
 export const getJobs = async (req: Request, res: Response) => {
-  const { user_id } = req.params;
+  const user_id = req.params.user_id as string;
   try {
     const jobs = await prisma.job.findMany({
       where: { user_id },

@@ -155,3 +155,14 @@ export async function getUserPreferences(userId: string): Promise<any | null> {
     return null;
   }
 }
+
+export async function updateJobWithResumeLink(jobId: string, customizedResumeId: string): Promise<void> {
+  try {
+    await prisma.job.update({
+      where: { job_id: jobId },
+      data: { customized_resume_id: customizedResumeId }
+    });
+  } catch (error) {
+    console.error(`Error updating job with resume link for ${jobId}:`, error);
+  }
+}
