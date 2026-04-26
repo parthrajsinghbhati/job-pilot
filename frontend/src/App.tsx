@@ -19,7 +19,7 @@ export default function App() {
     setIsAuthenticated(false);
   };
 
-  const handleAuth = (userId: string) => {
+  const handleAuth = () => {
     setIsAuthenticated(true);
   };
 
