@@ -144,11 +144,14 @@ async function fetchLinkedinJobDetails(jobId: string): Promise<any | null> {
   }
 }
 
-export async function scrapeLinkedin() {
-  for (const query of config.LINKEDIN_SEARCH_QUERIES) {
-    console.log(`Scraping LinkedIn for: ${query}`);
-    const jobIds = await fetchLinkedinJobIds(query, config.LINKEDIN_LOCATION);
-    const { existingIds, existingCompanyTitleKeys } = await dbUtils.getExistingJobs();
+export async function scrapeLinkedin(searchQuery?: string, location?: string, userId?: string) {
+  const queries = searchQuery ? [searchQuery] : config.LINKEDIN_SEARCH_QUERIES;
+  const loc = location || config.LINKEDIN_LOCATION;
+
+  for (const query of queries) {
+    console.log(`Scraping LinkedIn for: ${query} in ${loc}`);
+    const jobIds = await fetchLinkedinJobIds(query, loc);
+    const { existingIds, existingCompanyTitleKeys } = await dbUtils.getExistingJobs(userId);
 
     const newJobIds = jobIds.filter(id => !existingIds.has(id));
     const limit = config.MAX_JOBS_PER_SEARCH['linkedin'];
@@ -176,7 +179,7 @@ export async function scrapeLinkedin() {
     }
 
     if (detailedJobs.length > 0) {
-      await dbUtils.saveJobs(detailedJobs);
+      await dbUtils.saveJobs(detailedJobs, userId);
     }
   }
 }

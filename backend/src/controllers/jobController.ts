@@ -50,9 +50,8 @@ export const triggerScrape = async (req: Request, res: Response) => {
     // Background execution
     (async () => {
       try {
-        console.log('🤖 BACKGROUND: Scraper starting...');
-        // In a real multi-user app, we'd pass user_id to the scraper
-        await scrapeLinkedin();
+        console.log(`🤖 BACKGROUND: Scraper starting for user ${user_id}...`);
+        await scrapeLinkedin(query, location, user_id);
         console.log('🏁 Scraper done.');
       } catch (err) {
         console.error('💥 Scraper crashed:', err);
