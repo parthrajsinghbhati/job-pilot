@@ -1,4 +1,3 @@
-import axios from 'axios';
 import * as cheerio from 'cheerio';
 import TurndownService from 'turndown';
 import * as config from '../config';
@@ -30,20 +29,32 @@ function convertHtmlToMarkdown(html: string): string {
 async function fetchWithRetry(url: string, headers: any): Promise<string | null> {
   for (let attempt = 0; attempt <= config.MAX_RETRIES; attempt++) {
     try {
-      const response = await axios.get(url, {
+      const controller = new AbortController();
+      const timeoutId = setTimeout(() => controller.abort(), config.REQUEST_TIMEOUT);
+
+      const response = await fetch(url, {
         headers,
-        timeout: config.REQUEST_TIMEOUT,
+        signal: controller.signal,
       });
-      return response.data;
-    } catch (error: any) {
-      if (error.response?.status === 429 && attempt < config.MAX_RETRIES) {
-        const waitTime = (config.RETRY_DELAY_SECONDS + Math.random() * 5) * 1000;
-        console.warn(`Error 429: Too Many Requests. Retrying attempt ${attempt + 1}/${config.MAX_RETRIES} after ${waitTime / 1000}s...`);
-        await new Promise(r => setTimeout(r, waitTime));
-        headers['User-Agent'] = USER_AGENTS[Math.floor(Math.random() * USER_AGENTS.length)];
-        continue;
+      clearTimeout(timeoutId);
+
+      if (!response.ok) {
+        if (response.status === 429 && attempt < config.MAX_RETRIES) {
+          const waitTime = (config.RETRY_DELAY_SECONDS + Math.random() * 5) * 1000;
+          console.warn(`Error 429: Too Many Requests. Retrying attempt ${attempt + 1}/${config.MAX_RETRIES} after ${waitTime / 1000}s...`);
+          await new Promise(r => setTimeout(r, waitTime));
+          headers['User-Agent'] = USER_AGENTS[Math.floor(Math.random() * USER_AGENTS.length)];
+          continue;
+        }
+        throw new Error(`HTTP error! status: ${response.status}`);
       }
-      console.error(`Error fetching URL ${url}:`, error.message);
+      return await response.text();
+    } catch (error: any) {
+      if (error.name === 'AbortError') {
+         console.error(`Error fetching URL ${url}: Request timed out`);
+      } else {
+         console.error(`Error fetching URL ${url}:`, error.message);
+      }
       return null;
     }
   }

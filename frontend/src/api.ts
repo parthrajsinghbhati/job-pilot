@@ -1,17 +1,38 @@
-import axios from 'axios';
-
 const API_URL = import.meta.env.VITE_API_URL || 'http://localhost:8000';
 
-const api = axios.create({
-  baseURL: API_URL,
-});
-
-api.interceptors.request.use((config) => {
+const request = async (endpoint: string, options: RequestInit = {}) => {
   const token = localStorage.getItem('token');
+  const headers: HeadersInit = {
+    'Content-Type': 'application/json',
+    ...(options.headers || {}),
+  };
+
   if (token) {
-    config.headers.Authorization = `Bearer ${token}`;
+    headers['Authorization'] = `Bearer ${token}`;
   }
-  return config;
-});
+
+  const response = await fetch(`${API_URL}${endpoint}`, {
+    ...options,
+    headers,
+  });
+
+  let data;
+  try {
+    data = await response.json();
+  } catch (e) {
+    data = null;
+  }
+
+  if (!response.ok) {
+    throw { response: { data } };
+  }
+
+  return { data };
+};
+
+const api = {
+  get: (endpoint: string) => request(endpoint, { method: 'GET' }),
+  post: (endpoint: string, body?: any) => request(endpoint, { method: 'POST', body: JSON.stringify(body) }),
+};
 
 export default api;

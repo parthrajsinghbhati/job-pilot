@@ -1,4 +1,3 @@
-import axios from 'axios';
 import * as config from '../config';
 import { prisma } from '../lib/prisma';
 import { USER_AGENTS } from '../utils/userAgents';
@@ -23,22 +22,27 @@ async function checkSingleLinkedinJobActive(jobId: string): Promise<boolean | nu
       await new Promise(r => setTimeout(r, sleepTime));
 
       const userAgent = USER_AGENTS[Math.floor(Math.random() * USER_AGENTS.length)];
-      const response = await axios.get(jobDetailUrl, {
+      
+      const controller = new AbortController();
+      const timeoutId = setTimeout(() => controller.abort(), config.ACTIVE_CHECK_TIMEOUT);
+
+      const response = await fetch(jobDetailUrl, {
         headers: { 'User-Agent': userAgent },
-        timeout: config.ACTIVE_CHECK_TIMEOUT,
-        maxRedirects: 5,
+        signal: controller.signal,
+        redirect: 'follow',
       });
+      clearTimeout(timeoutId);
 
       if (response.status === 404) return true;
-      if (response.status >= 400) return false;
+      if (!response.ok) return false;
 
-      const html = response.data.toLowerCase();
+      const html = (await response.text()).toLowerCase();
       for (const keyword of inactiveKeywords) {
         if (html.includes(keyword.toLowerCase())) return true;
       }
       return false;
     } catch (error: any) {
-      if (error.response?.status === 404) return true;
+      if (error.name === 'AbortError' || error.response?.status === 404) return true;
       console.warn(`Attempt ${attempt + 1} failed for job ${jobId}: ${error.message}`);
       if (attempt < config.ACTIVE_CHECK_MAX_RETRIES) {
         const waitTime = (config.ACTIVE_CHECK_RETRY_DELAY + Math.random() * 5) * 1000;

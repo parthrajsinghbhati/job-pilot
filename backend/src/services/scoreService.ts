@@ -2,9 +2,8 @@ import * as config from '../config';
 import { prisma } from '../lib/prisma';
 import { primaryClient as llmClient } from './llmService';
 const pdfParse = require('pdf-parse');
-import axios from 'axios';
 
-function formatResumeToText(resumeData: any): string {
+export function formatResumeToText(resumeData: any): string {
   if (!resumeData) return 'Resume data is not available.';
   
   // If it's a Prisma object with separate fields, we use them
@@ -90,9 +89,14 @@ async function getResumeScoreFromAi(resumeText: string, jobDetails: any): Promis
 
 async function extractTextFromPdfUrl(pdfUrl: string): Promise<string | null> {
   try {
-    const response = await axios.get(pdfUrl, { responseType: 'arraybuffer' });
-    const data = await pdfParse(Buffer.from(response.data));
-    return data.text || null;
+    const response = await fetch(pdfUrl);
+    if (!response.ok) throw new Error(`HTTP error! status: ${response.status}`);
+    const arrayBuffer = await response.arrayBuffer();
+    
+    const { PDFParse } = require('pdf-parse');
+    const parser = new PDFParse({ data: Buffer.from(arrayBuffer) });
+    const result = await parser.getText();
+    return result.text || null;
   } catch (error) {
     console.error('Error extracting text from PDF URL:', error);
     return null;
@@ -103,31 +107,33 @@ export async function scoreJobs() {
   console.log('--- Starting Job Scoring ---');
   
   // Phase 1: Initial Scoring
-  const baseResume = await prisma.baseResume.findFirst({
-    where: { user_id: undefined } // Or whatever identifies the base resume
+  const jobsToScore = await prisma.job.findMany({
+    where: {
+      resume_score: null,
+    },
+    take: config.JOBS_TO_SCORE_PER_RUN,
   });
-  
-  if (baseResume) {
-    const resumeText = formatResumeToText(baseResume.resume_data);
-    const jobsToScore = await prisma.job.findMany({
-      where: {
-        resume_score: null,
-      },
-      take: config.JOBS_TO_SCORE_PER_RUN,
-    });
 
-    if (jobsToScore) {
-      for (const job of jobsToScore) {
-        const score = await getResumeScoreFromAi(resumeText, job);
-        if (score !== null) {
-          await prisma.job.update({
-            where: { job_id: job.job_id },
-            data: { 
-              resume_score: score, 
-              resume_score_stage: 'initial' 
-            }
-          });
-        }
+  if (jobsToScore && jobsToScore.length > 0) {
+    for (const job of jobsToScore) {
+      if (!job.user_id) continue;
+      
+      const baseResume = await prisma.baseResume.findFirst({
+        where: { user_id: job.user_id }
+      });
+
+      if (!baseResume) continue;
+
+      const resumeText = formatResumeToText(baseResume.resume_data);
+      const score = await getResumeScoreFromAi(resumeText, job);
+      if (score !== null) {
+        await prisma.job.update({
+          where: { job_id: job.job_id },
+          data: { 
+            resume_score: score, 
+            resume_score_stage: 'initial' 
+          }
+        });
       }
     }
   }
